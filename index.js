@@ -54,7 +54,7 @@ app.get('/rooms/:roomId', function (req, res) {
             if (result.length != 1) {
                 res.send('No room found with ID ' + roomId, 404)
             }else{
-                res.send(result)[0]
+                res.send(result[0])
             }
         }
     })
