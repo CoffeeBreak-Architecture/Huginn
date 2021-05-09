@@ -8,7 +8,7 @@ app.use(express.json());
 
 const createTableQuery = 'CREATE TABLE IF NOT EXISTS rooms ('
  + 'id CHAR(36) PRIMARY KEY,'
- + 'ownerId CHAR(36) NOT NULL,'
+ + 'ownerId CHAR(36),'
  + 'name VARCHAR(64) '
  + ')'
 
@@ -63,8 +63,8 @@ app.get('/rooms/:roomId', function (req, res) {
 app.post('/rooms', function (req, res) {
 
     let id = uuid()
-    let owner = req.body.ownerId
-    let name = req.body.name
+    let owner = null
+    let name = generateRandomName()
 
     con.query("INSERT INTO rooms VALUES (?, ?, ?)", [id, owner, name], (error, result, fields) => {
         if (error) {
@@ -117,3 +117,16 @@ app.delete('/rooms/:roomId', function (req, res) {
 app.listen(port, () => {
     console.log('User repository is listening at port: ' + port)
 })
+
+const randAdjectives = ["defective", "nappy", "seperate", "few", "lackadaisical", "bent", "mute", "tedius", "dashing", "breif"]
+const randNouns = ["way", "ink", "harbor", "experience", "yam", "mitten", "rock", "insurance", "hill", "apparel", "church", "vacation"]
+
+function generateRandomName () {
+    let adj = getRandomInt(randAdjectives.length);
+    let nns = getRandomInt(randNouns.length);
+    return randAdjectives[adj] + " " + randNouns[nns];
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+}
