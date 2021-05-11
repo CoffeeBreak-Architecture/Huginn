@@ -35,6 +35,10 @@ function initalizeDatabase () {
     })
 }
 
+app.get("/", (req, res) => {
+    res.send("");
+})
+
 app.get('/rooms', function (req, res) {
     con.query('SELECT * FROM rooms', (error, result, fields) => {
         if (error) {
