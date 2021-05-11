@@ -9,25 +9,24 @@ app.use(express.json());
 const createTableQuery = 'CREATE TABLE IF NOT EXISTS rooms ('
  + 'id CHAR(36) PRIMARY KEY,'
  + 'ownerId CHAR(36),'
- + 'name VARCHAR(64) '
- + ')'
+ + 'name VARCHAR(64),'
+ + 'socketUrl VARCHAR(128),'
+ + 'signallingUrl VARCHAR(128)'
+ + ' )'
 
-const con = mysql.createConnection({
+const pool = mysql.createPool({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE
-})
-
-con.connect(function(error) {
-    if (error) {
-       throw error
-    } else initalizeDatabase()
+    database: process.env.MYSQL_DATABASE,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 })
 
 function initalizeDatabase () {
     console.log(createTableQuery)
-    con.query(createTableQuery, function(error, result, fields) {
+    pool.query(createTableQuery, function(error, result, fields) {
         if (error) {
             console.error('Failed to initialize database.', error)
         }
@@ -40,7 +39,7 @@ app.get("/", (req, res) => {
 })
 
 app.get('/rooms', function (req, res) {
-    con.query('SELECT * FROM rooms', (error, result, fields) => {
+    pool.query('SELECT * FROM rooms', (error, result, fields) => {
         if (error) {
             res.send(error, 500)
         }else{
@@ -51,7 +50,7 @@ app.get('/rooms', function (req, res) {
 
 app.get('/rooms/:roomId', function (req, res) {
     let roomId = req.params.roomId;
-    con.query('SELECT * FROM rooms WHERE id = ?', [roomId], (error, result, fields) => {
+    pool.query('SELECT * FROM rooms WHERE id = ?', [roomId], (error, result, fields) => {
         if (error) {
             res.send(error, 500)
         }else{
@@ -68,13 +67,17 @@ app.post('/rooms', function (req, res) {
 
     let id = uuid()
     let owner = null
-    let name = generateRandomName()
+    let name = req.body.name
+    let socketUrl = req.body.socketUrl
+    let signallingUrl = req.body.signallingUrl
 
-    con.query("INSERT INTO rooms VALUES (?, ?, ?)", [id, owner, name], (error, result, fields) => {
+    console.log(socketUrl)
+
+    pool.query("INSERT INTO rooms VALUES (?, ?, ?, ?, ?)", [id, owner, name, socketUrl, signallingUrl], (error, result, fields) => {
         if (error) {
             res.send(error, 500)
         }else{
-            room = {id: id, ownerId: owner, name: name}
+            room = {id: id, ownerId: owner, name: name, socketUrl: socketUrl, signallingUrl: signallingUrl} // Echo back the new room.
             res.send(room, 201)
         }
     })
@@ -85,7 +88,7 @@ app.patch('/rooms/:roomId/owner', function (req, res) {
     let roomId = req.params.roomId;
     let owner = req.body.ownerId
 
-    con.query('UPDATE rooms SET ownerId = ? WHERE id = ?', [owner, roomId], (error, result, fields) => {
+    pool.query('UPDATE rooms SET ownerId = ? WHERE id = ?', [owner, roomId], (error, result, fields) => {
         if (error) {
             res.send(error, 500)
         }else{
@@ -98,7 +101,7 @@ app.patch('/rooms/:roomId/name', function (req, res) {
     let roomId = req.params.roomId;
     let name = req.body.name
 
-    con.query('UPDATE rooms SET name = ? WHERE id = ?', [name, roomId], (error, result, fields) => {
+    pool.query('UPDATE rooms SET name = ? WHERE id = ?', [name, roomId], (error, result, fields) => {
         if (error) {
             res.send(error, 500)
         }else{
@@ -109,7 +112,7 @@ app.patch('/rooms/:roomId/name', function (req, res) {
 
 app.delete('/rooms/:roomId', function (req, res) {
     let roomId = req.params.roomId;
-    con.query('DELETE FROM rooms WHERE id = ?', [roomId], (error, result, fields) => {
+    pool.query('DELETE FROM rooms WHERE id = ?', [roomId], (error, result, fields) => {
         if (error) {
             res.send(error, 500)
         }else{
@@ -120,17 +123,5 @@ app.delete('/rooms/:roomId', function (req, res) {
 
 app.listen(port, () => {
     console.log('User repository is listening at port: ' + port)
+    initalizeDatabase()
 })
-
-const randAdjectives = ["defective", "nappy", "seperate", "few", "lackadaisical", "bent", "mute", "tedius", "dashing", "breif"]
-const randNouns = ["way", "ink", "harbor", "experience", "yam", "mitten", "rock", "insurance", "hill", "apparel", "church", "vacation"]
-
-function generateRandomName () {
-    let adj = getRandomInt(randAdjectives.length);
-    let nns = getRandomInt(randNouns.length);
-    return randAdjectives[adj] + " " + randNouns[nns];
-}
-
-function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
-}
