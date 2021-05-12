@@ -41,9 +41,9 @@ app.get("/", (req, res) => {
 app.get('/rooms', function (req, res) {
     pool.query('SELECT * FROM rooms', (error, result, fields) => {
         if (error) {
-            res.send(error, 500)
+            res.status(500).send(error)
         }else{
-            res.send(result)
+            res.status(200).send(result)
         }
     })
 })
@@ -52,10 +52,10 @@ app.get('/rooms/:roomId', function (req, res) {
     let roomId = req.params.roomId;
     pool.query('SELECT * FROM rooms WHERE id = ?', [roomId], (error, result, fields) => {
         if (error) {
-            res.send(error, 500)
+            res.status(500).send(error)
         }else{
             if (result.length != 1) {
-                res.send('No room found with ID ' + roomId, 404)
+                res.status(404).send('No room found with ID ' + roomId)
             }else{
                 res.send(result[0])
             }
@@ -71,16 +71,18 @@ app.post('/rooms', function (req, res) {
     let socketUrl = req.body.socketUrl
     let signallingUrl = req.body.signallingUrl
 
-    console.log(socketUrl)
-
-    pool.query("INSERT INTO rooms VALUES (?, ?, ?, ?, ?)", [id, owner, name, socketUrl, signallingUrl], (error, result, fields) => {
-        if (error) {
-            res.send(error, 500)
-        }else{
-            room = {id: id, ownerId: owner, name: name, socketUrl: socketUrl, signallingUrl: signallingUrl} // Echo back the new room.
-            res.send(room, 201)
-        }
-    })
+    if (name == undefined || socketUrl == undefined || signallingUrl == undefined) {
+        res.status(400).send('Body must contain name, socketUrl and signallingUrl properties.')
+    }else{
+        pool.query("INSERT INTO rooms VALUES (?, ?, ?, ?, ?)", [id, owner, name, socketUrl, signallingUrl], (error, result, fields) => {
+            if (error) {
+                res.status(500).send(error)
+            }else{
+                room = {id: id, ownerId: owner, name: name, socketUrl: socketUrl, signallingUrl: signallingUrl} // Echo back the new room.
+                res.status(201).send(room)
+            }
+        })
+    }
 })
 
 app.patch('/rooms/:roomId/owner', function (req, res) {
@@ -90,9 +92,9 @@ app.patch('/rooms/:roomId/owner', function (req, res) {
 
     pool.query('UPDATE rooms SET ownerId = ? WHERE id = ?', [owner, roomId], (error, result, fields) => {
         if (error) {
-            res.send(error, 500)
+            res.status(500).send(error)
         }else{
-            res.sendStatus(200)
+            res.status(200).send()
         }
     })
 })
@@ -103,9 +105,9 @@ app.patch('/rooms/:roomId/name', function (req, res) {
 
     pool.query('UPDATE rooms SET name = ? WHERE id = ?', [name, roomId], (error, result, fields) => {
         if (error) {
-            res.send(error, 500)
+            res.status(500).send(error)
         }else{
-            res.sendStatus(200)
+            res.status(200).send()
         }
     })
 })
@@ -114,9 +116,9 @@ app.delete('/rooms/:roomId', function (req, res) {
     let roomId = req.params.roomId;
     pool.query('DELETE FROM rooms WHERE id = ?', [roomId], (error, result, fields) => {
         if (error) {
-            res.send(error, 500)
+            res.status(500).send(error)
         }else{
-            res.sendStatus(200)
+            res.status(200).send()
         }
     })
 })
