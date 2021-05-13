@@ -64,10 +64,10 @@ app.get('/rooms/:roomId', function (req, res) {
 })
 
 app.post('/rooms', function (req, res) {
-
+    console.log()
     let id = uuid()
     let owner = null
-    let name = req.body.name
+    let name = generateRandomName()
     let socketUrl = req.body.socketUrl
     let signallingUrl = req.body.signallingUrl
 
@@ -127,3 +127,16 @@ app.listen(port, () => {
     console.log('User repository is listening at port: ' + port)
     initalizeDatabase()
 })
+
+const randAdjectives = ["defective", "nappy", "seperate", "few", "lackadaisical", "bent", "mute", "tedius", "dashing", "breif"]
+const randNouns = ["way", "ink", "harbor", "experience", "yam", "mitten", "rock", "insurance", "hill", "apparel", "church", "vacation"]
+
+function generateRandomName () {
+    let adj = getRandomInt(randAdjectives.length);
+    let nns = getRandomInt(randNouns.length);
+    return randAdjectives[adj] + " " + randNouns[nns];
+}
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * max);
+}
