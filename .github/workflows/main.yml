@@ -34,5 +34,6 @@ jobs:
        
       - name: Test
         run: |
+          npm ci
           node index.js
           npm test
