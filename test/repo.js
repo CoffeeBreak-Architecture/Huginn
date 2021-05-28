@@ -29,7 +29,7 @@ describe ('Room repository tests', function () {
 
         it ('GET /rooms', async function () {
             let rooms = await (axios.get(url + '/rooms'))
-            expect(rooms.data.length).to.equal(0)
+            expect(rooms.data.length).to.exist
             expect(rooms.status).to.equal(200)
         })
 
@@ -42,13 +42,30 @@ describe ('Room repository tests', function () {
         })
 
         it ('GET /rooms/:id', async function () {
-            let post = await axios.post(url + '/rooms', {name: 'someName', socketUrl: 'http://someSocketUrl', signallingUrl: 'http://someSignallingUrl'})
+            let post = await axios.post(url + '/rooms', {socketUrl: 'http://someSocketUrl', signallingUrl: 'http://someSignallingUrl'})
             let room = await axios.get(url + '/rooms/' + post.data.id)
 
-            expect(room.data.name).to.equal('someName')
+            expect(room.data.name).to.exist
             expect(room.data.socketUrl).to.equal('http://someSocketUrl')
             expect(room.data.signallingUrl).to.equal('http://someSignallingUrl')
             expect(room.status).to.equal(200)
+        })
+
+        it ('IDs are unique', async function () {
+            posts = []
+            for (let i = 0; i < 100; i++) {
+                let post = await axios.post(url + '/rooms', {name: 'someName', socketUrl: 'http://someSocketUrl', signallingUrl: 'http://someSignallingUrl'})          
+                posts.push(post)      
+            }
+            expect(posts.every(x => {
+                let identicals = 0
+                posts.forEach(y => {
+                    if (y.data.id == x.data.id) {
+                        identicals++
+                    }
+                })
+                return identicals == 1 // Each room will always come across itself.
+            })).to.be.true
         })
 
         it ('Negative GET /rooms/:id', async function () {

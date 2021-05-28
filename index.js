@@ -71,8 +71,8 @@ app.post('/rooms', function (req, res) {
     let socketUrl = req.body.socketUrl
     let signallingUrl = req.body.signallingUrl
 
-    if (name == undefined || socketUrl == undefined || signallingUrl == undefined) {
-        res.status(400).send('Body must contain name, socketUrl and signallingUrl properties.')
+    if (socketUrl == undefined || signallingUrl == undefined) {
+        res.status(400).send('Body must contain socketUrl and signallingUrl properties.')
     }else{
         pool.query("INSERT INTO rooms VALUES (?, ?, ?, ?, ?)", [id, owner, name, socketUrl, signallingUrl], (error, result, fields) => {
             if (error) {
