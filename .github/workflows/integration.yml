@@ -2,7 +2,7 @@
 # This might be impractical for a component with a lot of dependancies, but not sure how else to accomplish this.
 # To further complicate matters, each dependancy naturally needs their own dependancies as well. For these reasons, only this repo is tested like this as an experiment.
 # Maybe if it was somehow possible to have a single, shared "whole system integration test" file, which all repositories ran when pushed to?
-name: Node.js Test
+name: Node.js Integration
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
     env:
       ROOM_MANAGER_URL: http://localhost:3020
       ROOM_REPOSITORY_URL: http://localhost:3011
-      ROOM_MANAGER: http://localhost:3020
+      USER_REPOSITORY: http://localhost:3010
       ROOM_REPOSITORY: http://localhost:3011
       SOCKET_SERVER_URL: dummy-url
       MYSQL_HOST: localhost
