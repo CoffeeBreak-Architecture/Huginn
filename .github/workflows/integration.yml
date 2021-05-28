@@ -1,0 +1,104 @@
+# Just an experiment. We try to perform integration testing by testing all dependancies when a push is made.
+# This might be impractical for a component with a lot of dependancies, but not sure how else to accomplish this.
+# To further complicate matters, each dependancy naturally needs their own dependancies as well. For these reasons, only this repo is tested like this as an experiment.
+# Maybe if it was somehow possible to have a single, shared "whole system integration test" file, which all repositories ran when pushed to?
+name: Node.js Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    
+    env:
+      ROOM_MANAGER_URL: http://localhost:3020
+      ROOM_REPOSITORY_URL: http://localhost:3011
+      SOCKET_SERVER_URL: dummy-url
+      MYSQL_HOST: localhost
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: coffeebreak
+    
+    steps:
+      - name: Set up MySQL
+        run: |
+          sudo /etc/init.d/mysql start
+          mysql -e 'CREATE DATABASE ${{ env.MYSQL_DATABASE }};' -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }}
+    
+      - name: Fetch Huginn
+        uses: actions/checkout@v2
+        with: 
+          path: 'yggdrasil'
+        
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 12
+          
+      - name: Fetch Muninn
+        uses: actions/checkout@v2
+        with: 
+          repository: 'coffeebreak-architecture/muninn'
+          path: 'muninn'
+          
+      - name: Fetch Odin
+        uses: actions/checkout@v2
+        with:
+          repository: 'coffeebreak-architecture/odin'
+          path: 'odin'
+          
+      - name: Fetch Yggdrasil
+        uses: actions/checkout@v2
+        with:
+          repository: 'coffeebreak-architecture/yggdrasil'
+          path: 'huginn'
+          
+      - name: Fetch Heimdall
+        uses: actions/checkout@v2
+        with:
+          repository: 'coffeebreak-architecture/heimdall'
+          path: 'heimdall'
+       
+      - name: npm ci
+        run: |
+          cd huginn
+          npm ci
+          cd ..
+          cd muninn
+          npm ci
+          cd ..
+          cd heimdall
+          npm ci
+          cd ..
+          cd odin
+          npm ci
+          cd ..
+          cd yggdrasil
+          npm ci
+          cd ..
+       
+      - name: Start services
+        run: | 
+          node huginn/index.js &
+          node muninn/index.js &
+          node yggdrasil/index.js &
+          node odin/index.js &
+          node heimdall/index.js &
+          
+      - run: |
+          cd muninn
+          npm test
+          cd ..
+          cd yggdrasil
+          npm test
+          cd ..
+          cd odin
+          npm test 
+          cd ..
+          cd heimdall
+          npm test
