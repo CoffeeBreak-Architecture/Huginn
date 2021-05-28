@@ -18,6 +18,8 @@ jobs:
     env:
       ROOM_MANAGER_URL: http://localhost:3020
       ROOM_REPOSITORY_URL: http://localhost:3011
+      ROOM_MANAGER: http://localhost:3020
+      ROOM_REPOSITORY: http://localhost:3011
       SOCKET_SERVER_URL: dummy-url
       MYSQL_HOST: localhost
       MYSQL_USER: root
