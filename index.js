@@ -24,6 +24,7 @@ const pool = mysql.createPool({
     queueLimit: 0
 })
 
+// Initiale the database table with the query defined above.
 function initalizeDatabase () {
     console.log(createTableQuery)
     try{
@@ -36,10 +37,12 @@ function initalizeDatabase () {
     
 }
 
+// Cluster container health check
 app.get("/", (req, res) => {
     res.send("");
 })
 
+// Get all rooms
 app.get('/rooms', function (req, res) {
     pool.query('SELECT * FROM rooms', (error, result, fields) => {
         if (error) {
@@ -50,6 +53,7 @@ app.get('/rooms', function (req, res) {
     })
 })
 
+// Get specific room using the ID
 app.get('/rooms/:roomId', function (req, res) {
     let roomId = req.params.roomId;
     pool.query('SELECT * FROM rooms WHERE id = ?', [roomId], (error, result, fields) => {
@@ -65,6 +69,7 @@ app.get('/rooms/:roomId', function (req, res) {
     })
 })
 
+// Post a new room
 app.post('/rooms', function (req, res) {
     console.log()
     let id = uuid()
@@ -87,6 +92,7 @@ app.post('/rooms', function (req, res) {
     }
 })
 
+// Change the owner of a room
 app.patch('/rooms/:roomId/owner', function (req, res) {
 
     let roomId = req.params.roomId;
@@ -101,6 +107,7 @@ app.patch('/rooms/:roomId/owner', function (req, res) {
     })
 })
 
+// Change the room name
 app.patch('/rooms/:roomId/name', function (req, res) {
     let roomId = req.params.roomId;
     let name = req.body.name
@@ -114,6 +121,7 @@ app.patch('/rooms/:roomId/name', function (req, res) {
     })
 })
 
+// Delete a specific room using the ID.
 app.delete('/rooms/:roomId', function (req, res) {
     let roomId = req.params.roomId;
     pool.query('DELETE FROM rooms WHERE id = ?', [roomId], (error, result, fields) => {
@@ -133,6 +141,7 @@ app.listen(port, () => {
 const randAdjectives = ["defective", "nappy", "seperate", "few", "lackadaisical", "bent", "mute", "tedius", "dashing", "breif"]
 const randNouns = ["way", "ink", "harbor", "experience", "yam", "mitten", "rock", "insurance", "hill", "apparel", "church", "vacation"]
 
+// Generate a random room name using a number of options.
 function generateRandomName () {
     let adj = getRandomInt(randAdjectives.length);
     let nns = getRandomInt(randNouns.length);
